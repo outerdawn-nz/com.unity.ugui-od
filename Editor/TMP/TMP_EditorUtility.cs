@@ -157,20 +157,19 @@ namespace TMPro.EditorUtilities
 
         private static string GetPackageRelativePath()
         {
-            // Check for potential UPM package
-            string packagePath = Path.GetFullPath("Packages/com.unity.ugui");
+            string packagePath = Path.GetFullPath("Assets/..");
             if (Directory.Exists(packagePath))
             {
-                return "Packages/com.unity.ugui";
-            }
-
-            packagePath = Path.GetFullPath("Assets/..");
-            if (Directory.Exists(packagePath))
-            {
-                // Search default location for development package
-                if (Directory.Exists(packagePath + "/Assets/Packages/com.unity.ugui/Editor Resources"))
+                // Search for default location of normal TextMesh Pro AssetStore package
+                if (Directory.Exists(packagePath + "/Assets/TextMeshPro/Editor Resources"))
                 {
-                    return "Assets/Packages/com.unity.ugui";
+                    return "Assets/TextMeshPro";
+                }
+
+                // Search default location for development package
+                if (Directory.Exists(packagePath + "/Assets/Packages/com.unity.TextMeshPro/Editor Resources"))
+                {
+                    return "Assets/Packages/com.unity.TextMeshPro";
                 }
 
                 // Search for potential alternative locations in the user project
@@ -179,31 +178,44 @@ namespace TMPro.EditorUtilities
                 if (packagePath != null) return packagePath;
             }
 
+            // Check for potential UPM package
+            packagePath = Path.GetFullPath("Packages/com.unity.textmeshpro");
+            if (Directory.Exists(packagePath))
+            {
+                return "Packages/com.unity.textmeshpro";
+            }
+
             return null;
         }
 
         private static string GetPackageFullPath()
         {
-            // Check for potential UPM package
-            string packagePath = Path.GetFullPath("Packages/com.unity.ugui");
+            string packagePath = Path.GetFullPath("Assets/..");
             if (Directory.Exists(packagePath))
             {
-                return packagePath;
-            }
-
-            packagePath = Path.GetFullPath("Assets/..");
-            if (Directory.Exists(packagePath))
-            {
-                // Search default location for development package
-                if (Directory.Exists(packagePath + "/Assets/Packages/com.unity.ugui/Editor Resources"))
+                // Search for default location of normal TextMesh Pro AssetStore package
+                if (Directory.Exists(packagePath + "/Assets/TextMeshPro/Editor Resources"))
                 {
-                    return packagePath + "/Assets/Packages/com.unity.ugui";
+                    return packagePath + "/Assets/TextMeshPro";
+                }
+
+                // Search default location for development package
+                if (Directory.Exists(packagePath + "/Assets/Packages/com.unity.TextMeshPro/Editor Resources"))
+                {
+                    return packagePath + "/Assets/Packages/com.unity.TextMeshPro";
                 }
 
                 // Search for potential alternative locations in the user project
                 string[] matchingPaths = Directory.GetDirectories(packagePath, "TextMesh Pro", SearchOption.AllDirectories);
                 string path = ValidateLocation(matchingPaths, packagePath);
                 if (path != null) return packagePath + path;
+            }
+
+            // Check for potential UPM package
+            packagePath = Path.GetFullPath("Packages/com.unity.textmeshpro");
+            if (Directory.Exists(packagePath))
+            {
+                return packagePath;
             }
 
             return null;

@@ -110,6 +110,44 @@ namespace TMPro
     /// </summary>
     public abstract class TMP_Text : MaskableGraphic
     {
+        // ++ Outerdawn ++++++++++++++++++++++++++++++++++++++++++++++
+        private HorizontalAlignmentOptions _hAlignment = HorizontalAlignmentOptions.Left;
+
+        /// <summary>
+        /// Two-letter ISO language code. https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
+        /// </summary>
+        public static string SelectedLanguage { get; set; }
+
+        public static bool IsLanguageRTL { get { return IsLanguageArabic; } }
+
+        private static bool IsLanguageArabic => SelectedLanguage == "ar";
+
+        private void SetRTL(bool isRtl)
+        {
+            if (DisableRTL)
+                isRtl = false;
+
+            if (isRightToLeftText == isRtl)
+                return; // already set
+
+            isRightToLeftText = isRtl;
+
+            if (RightAlignRTL)
+            {
+                if (isRtl)
+                {
+                    _hAlignment = horizontalAlignment; // remember our original alignment
+                    if (_hAlignment == HorizontalAlignmentOptions.Left || _hAlignment == HorizontalAlignmentOptions.Justified)
+                        horizontalAlignment = HorizontalAlignmentOptions.Right;
+                }
+                else
+                {
+                    horizontalAlignment = _hAlignment; // restore original alignment
+                }
+            }
+        }
+        // -- Outerdawn ----------------------------------------------
+
         /// <summary>
         /// A string containing the text to be displayed.
         /// </summary>
@@ -127,8 +165,15 @@ namespace TMPro
                 if (m_IsTextBackingStringDirty == false && m_text != null && value != null && m_text.Length == value.Length && m_text == value)
                     return;
 
+                // ++ Outerdawn ++++++++++++++++++++++++++++++++++++++++++++++
+                SetRTL(IsLanguageRTL);
+                if (IsLanguageArabic && !DisableRTL)
+                    m_text = ArabicSupport.Fix(value);
+                else
+                    m_text = value;
+                // -- Outerdawn ----------------------------------------------
+
                 m_IsTextBackingStringDirty = false;
-                m_text = value;
                 m_inputSource = TextInputSources.TextString;
                 m_havePropertiesChanged = true;
                 SetVerticesDirty();
@@ -160,12 +205,45 @@ namespace TMPro
         /// </summary>
         public bool isRightToLeftText
         {
-            get { return m_isRightToLeft; }
+            get
+            {
+                // ++ Outerdawn ++++++++++++++++++++++++++++++++++++++++++++++
+                if (m_disableRTL)
+                {
+                    return false;
+                }
+                // -- Outerdawn ----------------------------------------------
+
+                return m_isRightToLeft;
+            }
             set { if (m_isRightToLeft == value) return; m_isRightToLeft = value; m_havePropertiesChanged = true; SetVerticesDirty(); SetLayoutDirty(); }
         }
         [SerializeField]
         protected bool m_isRightToLeft = false;
 
+        // ++ Outerdawn ++++++++++++++++++++++++++++++++++++++++++++++
+        /// <summary>
+        /// Set this to true to flip left/right alignment in RTL languages.
+        /// </summary>
+        public bool RightAlignRTL
+        {
+            get { return m_rightAlignRTL; }
+            set { if (m_rightAlignRTL == value) return; m_rightAlignRTL = value; m_havePropertiesChanged = true; SetVerticesDirty(); SetLayoutDirty(); }
+        }
+        [SerializeField]
+        protected bool m_rightAlignRTL = false;
+
+        /// <summary>
+        /// Set this to true to disable RTL mode for this object.
+        /// </summary>
+        public bool DisableRTL
+        {
+            get { return m_disableRTL; }
+            set { if (m_disableRTL == value) return; m_disableRTL = value; m_havePropertiesChanged = true; SetVerticesDirty(); SetLayoutDirty(); }
+        }
+        [SerializeField]
+        protected bool m_disableRTL = false;
+        // -- Outerdawn ----------------------------------------------
 
         /// <summary>
         /// The Font Asset to be assigned to this text object.

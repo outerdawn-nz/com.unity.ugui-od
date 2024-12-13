@@ -27,6 +27,16 @@ namespace TMPro
     [Serializable][ExcludeFromPresetAttribute]
     public class TMP_FontAsset : TMP_Asset
     {
+        // ++ Outerdawn ++++++++++++++++++++++++++++++++++++++++++++++
+        public string locale
+        {
+            get { return m_Locale; }
+            internal set { m_Locale = value; }
+        }
+        [SerializeField]
+        private string m_Locale;
+        // -- Outerdawn ----------------------------------------------
+
         /// <summary>
         /// This field is set when the font asset is first created.
         /// </summary>
@@ -2584,7 +2594,7 @@ namespace TMPro
             // Make sure atlas texture is readable.
             if (m_AtlasTextures[m_AtlasTextureIndex].isReadable == false)
             {
-                Debug.LogWarning("Unable to add the requested character to font asset [" + this.name + "]'s atlas texture. Please make the texture [" + m_AtlasTextures[m_AtlasTextureIndex].name + "] readable.", m_AtlasTextures[m_AtlasTextureIndex]);
+                Debug.LogWarning("Unable to add the requested character [" + unicode + "] to font asset [" + this.name + "]'s atlas texture. Please make the texture [" + m_AtlasTextures[m_AtlasTextureIndex].name + "] readable.", m_AtlasTextures[m_AtlasTextureIndex]);
 
                 k_TryAddCharacterMarker.End();
                 return false;

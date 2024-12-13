@@ -10,7 +10,11 @@ namespace TMPro.EditorUtilities
     public abstract class TMP_BaseEditorPanel : Editor
     {
         //Labels and Tooltips
-        static readonly GUIContent k_RtlToggleLabel = new GUIContent("Enable RTL Editor", "Reverses text direction and allows right to left editing.");
+        static readonly GUIContent k_RtlToggleLabel = new GUIContent("Render Text RTL", "Reverses text direction and allows right to left editing.");
+        // ++ Outerdawn ++++++++++++++++++++++++++++++++++++++++++++++
+        static readonly GUIContent k_RightAlignRtlLabel = new GUIContent("Right Align RTL", "Flip left/right alignment in RTL languages.");
+        static readonly GUIContent k_DisableRtlLabel = new GUIContent("Disable RTL", "Disable RTL mode for this object.");
+        // -- Outerdawn ----------------------------------------------
         //static readonly GUIContent k_MainSettingsLabel = new GUIContent("Main Settings");
         static readonly GUIContent k_FontAssetLabel = new GUIContent("Font Asset", "The Font Asset containing the glyphs that can be rendered for this text.");
         static readonly GUIContent k_MaterialPresetLabel = new GUIContent("Material Preset", "The material used for rendering. Only materials created from the Font Asset can be used.");
@@ -95,6 +99,10 @@ namespace TMPro.EditorUtilities
         protected SerializedProperty m_TextProp;
 
         protected SerializedProperty m_IsRightToLeftProp;
+        // ++ Outerdawn ++++++++++++++++++++++++++++++++++++++++++++++
+        protected SerializedProperty m_IsRightAlignRTLProp;
+        protected SerializedProperty m_IsDisableRTLProp;
+        // -- Outerdawn ----------------------------------------------
         protected string m_RtlText;
 
         protected SerializedProperty m_FontAssetProp;
@@ -189,7 +197,13 @@ namespace TMPro.EditorUtilities
         protected virtual void OnEnable()
         {
             m_TextProp = serializedObject.FindProperty("m_text");
+
             m_IsRightToLeftProp = serializedObject.FindProperty("m_isRightToLeft");
+            // ++ Outerdawn ++++++++++++++++++++++++++++++++++++++++++++++
+            m_IsRightAlignRTLProp = serializedObject.FindProperty("m_rightAlignRTL");
+            m_IsDisableRTLProp = serializedObject.FindProperty("m_disableRTL");
+            // -- Outerdawn ----------------------------------------------
+
             m_FontAssetProp = serializedObject.FindProperty("m_fontAsset");
             m_FontSharedMaterialProp = serializedObject.FindProperty("m_sharedMaterial");
 
@@ -464,7 +478,14 @@ namespace TMPro.EditorUtilities
                 float labelWidth = EditorGUIUtility.labelWidth;
                 EditorGUIUtility.labelWidth = 110f;
 
-                m_IsRightToLeftProp.boolValue = EditorGUI.Toggle(new Rect(rect.width - 120, rect.y + 3, 130, 20), k_RtlToggleLabel, m_IsRightToLeftProp.boolValue);
+                // ++ Outerdawn ++++++++++++++++++++++++++++++++++++++++++++++
+                GUI.enabled = false; // RTL is set automatically by language selection
+                /*m_IsRightToLeftProp.boolValue = !m_IsDisableRTLProp.boolValue &&*/ EditorGUI.Toggle(new Rect(rect.width - 120, rect.y + 3, 130, 20), k_RtlToggleLabel, m_IsRightToLeftProp.boolValue);
+                GUI.enabled = true;
+
+                m_IsRightAlignRTLProp.boolValue = EditorGUI.Toggle(new Rect(rect.width - 270, rect.y + 3 + 20, 100, 20), k_RightAlignRtlLabel, m_IsRightAlignRTLProp.boolValue);
+                m_IsDisableRTLProp.boolValue = EditorGUI.Toggle(new Rect(rect.width - 120, rect.y + 3 + 20, 100, 20), k_DisableRtlLabel, m_IsDisableRTLProp.boolValue);
+                // -- Outerdawn ----------------------------------------------
 
                 EditorGUIUtility.labelWidth = labelWidth;
 
@@ -478,6 +499,9 @@ namespace TMPro.EditorUtilities
                     m_HavePropertiesChanged = true;
                 }
 
+                // ++ Outerdawn ++++++++++++++++++++++++++++++++++++++++++++++
+                // This fake-reverse input box doesn't work as intended, better to disable it entirely.
+                /*
                 if (m_IsRightToLeftProp.boolValue)
                 {
                     // Copy source text to RTL string
@@ -505,6 +529,8 @@ namespace TMPro.EditorUtilities
                         m_TextProp.stringValue = sourceText;
                     }
                 }
+                */
+                // -- Outerdawn ----------------------------------------------
 
                 // TEXT STYLE
                 if (m_StyleNames != null)
