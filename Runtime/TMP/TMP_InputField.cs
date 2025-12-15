@@ -473,6 +473,7 @@ namespace TMPro
                     case RuntimePlatform.GameCoreXboxSeries:
                     #endif
                     case RuntimePlatform.Switch:
+                    case RuntimePlatform.Switch2:
                     #if UNITY_2022_1_OR_NEWER
                     case RuntimePlatform.WebGLPlayer:
                     #endif
@@ -506,6 +507,7 @@ namespace TMPro
                     case RuntimePlatform.GameCoreXboxSeries:
                     #endif
                     case RuntimePlatform.Switch:
+                    case RuntimePlatform.Switch2:
                     #if UNITY_2022_1_OR_NEWER
                     case RuntimePlatform.WebGLPlayer:
                     #endif
@@ -547,6 +549,7 @@ namespace TMPro
                 case RuntimePlatform.GameCoreXboxSeries:
                 #endif
                 case RuntimePlatform.Switch:
+                case RuntimePlatform.Switch2:
                     return false;
                 #if UNITY_2022_1_OR_NEWER
                 case RuntimePlatform.WebGLPlayer:
@@ -1538,6 +1541,7 @@ namespace TMPro
             switch (platform)
             {
                 case RuntimePlatform.Android:
+                case RuntimePlatform.WebGLPlayer:
                     if (s_IsQuestDevice)
                         return TouchScreenKeyboard.isSupported;
 
@@ -1762,7 +1766,6 @@ namespace TMPro
                     }
                 }
 
-                OnDeselect(null);
                 return;
             }
 
@@ -1937,9 +1940,9 @@ namespace TMPro
                 if (multiLine)
                 {
                     if (localMousePos.y > rect.yMax)
-                        MoveUp(true, true);
+                        MoveUp(true, false);
                     else if (localMousePos.y < rect.yMin)
-                        MoveDown(true, true);
+                        MoveDown(true, false);
                 }
                 else
                 {
@@ -2394,16 +2397,15 @@ namespace TMPro
                         }
                         break;
                 }
-
             }
 
-            if (consumedEvent)
+            // We must also consume events when IME is active to prevent them from being passed to the text field. // UUM-100552
+            if (consumedEvent || (m_IsCompositionActive && compositionLength > 0))
             {
                 UpdateLabel();
                 eventData.Use();
             }
         }
-
 
         /// <summary>
         ///
@@ -3347,7 +3349,7 @@ namespace TMPro
             // Can't go past the character limit
             if (characterLimit > 0 && text.Length >= characterLimit)
                 return;
-            
+
             m_Text = text.Insert(m_StringPosition, replaceString);
 
             if (!char.IsHighSurrogate(c))
@@ -3900,6 +3902,7 @@ namespace TMPro
             TMP_FontAsset fontAsset = m_TextComponent.font;
             float baseScale = (m_TextComponent.fontSize / fontAsset.m_FaceInfo.pointSize * fontAsset.m_FaceInfo.scale);
             float width = m_CaretWidth * fontAsset.faceInfo.lineHeight * baseScale * 0.05f;
+            width = Mathf.Max(width, 1.0f);
 
             m_CursorVerts[0].position = new Vector3(startPosition.x, bottom, 0.0f);
             m_CursorVerts[1].position = new Vector3(startPosition.x, top, 0.0f);
@@ -4187,11 +4190,15 @@ namespace TMPro
                 if (!cursorBeforeDash)
                 {
                     if (ch >= '0' && ch <= '9') return ch;
-                    if (ch == '-' && (pos == 0 || selectionAtStart)) return ch;
+                    if (ch == '-' && (pos == 0 || selectionAtStart) && !text.Contains('-')) return ch;
 
                     var separator = Thread.CurrentThread.CurrentCulture.NumberFormat.NumberDecimalSeparator;
                     if (ch == Convert.ToChar(separator) && characterValidation == CharacterValidation.Decimal && !text.Contains(separator)) return ch;
+
+                    //Some keyboards including Samsung require double tapping a . to get a - this allows these keyboards to input negative integers
+                    if (characterValidation == CharacterValidation.Integer && ch == '.' && (pos == 0 || selectionAtStart) && !text.Contains('-')) return '-';
                 }
+
             }
             else if (characterValidation == CharacterValidation.Digit)
             {
@@ -4342,8 +4349,8 @@ namespace TMPro
                     OnFocus();
 
                     // Opening the soft keyboard sets its selection to the end of the text.
-                    // As such, we set the selection to match the Input Field's internal selection.
-                    if (m_SoftKeyboard != null && m_SoftKeyboard.canSetSelection)
+                    // As such, we set the selection to match the Input Field's internal selection. // UUM-112457
+                    if (m_SoftKeyboard != null)
                     {
                         int length = stringPositionInternal < stringSelectPositionInternal ? stringSelectPositionInternal - stringPositionInternal : stringPositionInternal - stringSelectPositionInternal;
                         m_SoftKeyboard.selection = new RangeInt(stringPositionInternal < stringSelectPositionInternal ? stringPositionInternal : stringSelectPositionInternal, length);
@@ -4523,7 +4530,7 @@ namespace TMPro
                     {
                         m_LineType = LineType.SingleLine;
                         m_InputType = InputType.Standard;
-                        m_KeyboardType = TouchScreenKeyboardType.NumberPad;
+                        m_KeyboardType = TouchScreenKeyboardType.NumbersAndPunctuation;
                         m_CharacterValidation = CharacterValidation.Integer;
                         break;
                     }
